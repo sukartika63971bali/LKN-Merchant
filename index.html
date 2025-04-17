@@ -2,7 +2,9 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LKN Merchant Online Form</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     body {
       font-family: 'Times New Roman', serif;
@@ -40,6 +42,9 @@
       border: 1px solid #000;
       box-sizing: border-box;
     }
+    textarea {
+      height: 5em;
+    }
     .box {
       border: 1px solid #000;
       padding: 8px;
@@ -58,6 +63,7 @@
     button {
       font-size: 14pt;
       padding: 6px 16px;
+      margin: 0 5px;
     }
     .signature-preview {
       width: 100%;
@@ -70,13 +76,27 @@
       height: 100px;
       border: 1px solid #000;
       margin-top: 10px;
-      text-align: center;
-      line-height: 100px;
+      position: relative;
+    }
+    .signature-box-print span {
+      position: absolute;
+      bottom: 5px;
+      left: 50%;
+      transform: translateX(-50%);
       color: #888;
       font-style: italic;
     }
+    .uploaded-images img {
+      max-width: 100%;
+      max-height: 150px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      object-fit: contain;
+    }
     @media print {
-      .print-button, #signatureUpload, #photoUpload {
+      .print-button,
+      #signatureUpload,
+      #photoUpload {
         display: none;
       }
       input, select, textarea {
@@ -87,62 +107,49 @@
   </style>
 </head>
 <body>
+<div id="pdfContent">
   <div class="page">
     <h2>LAPORAN KUNJUNGAN NASABAH</h2>
-
     <div class="box">
       <label>1. Petugas IT BRI yang berkunjung</label>
-      <input type="text" value="I Wayan Sukartika">
-
+      <input type="text" value="Nama IT">
       <label>2. Pihak yang dikunjungi</label>
       <input type="text" value="Merchant BRI">
-
       <label>3. Alamat yang dikunjungi</label>
       <input type="text" value="Jalan Gatsu Timur Denpasar">
-
       <label>4. Tanggal kunjungan</label>
       <input type="date" value="2024-09-02">
-
       <label>5. Tujuan kunjungan</label>
       <input type="text" value="Pengecekan Transaksi Merchant">
     </div>
-
     <div class="box">
       <label>6. Hasil Kunjungan</label>
       <div class="section-title">1. UKER PENGELOLA :</div>
       <input type="text" value="KC Denpasar Gatsu">
-
       <div class="section-title">2. TID</div>
       <input type="text" value="10744993">
-
       <div class="section-title">3. Nama Merchant</div>
-      <input type="text" value="DENPASAR ELECTRONIC II">
-
+      <input type="text" id="namaMerchant" value="Nama Merchant">
       <div class="section-title">4. Jenis Usaha Merchant</div>
       <textarea>Penjualan Barang Elektronik dan Furniture</textarea>
-
       <div class="section-title">5. Kelayakan Usaha Merchant</div>
       <select>
         <option selected>Nasabah Ramai</option>
         <option>Tidak Ramai</option>
       </select>
-
       <div class="section-title">6. Kondisi EDC</div>
       <select>
         <option selected>Baik dan berfungsi normal</option>
         <option>Rusak</option>
         <option>Sering trouble</option>
       </select>
-
       <div class="section-title">7. Catatan Tambahan</div>
-      <textarea>Termasuk EDC Nop. Mesin EDC Kondisi baik. Info petugas: EDC tidak digunakan karena nasabah kebanyakan pakai EDC BCA, sedangkan nasabah BRI sebagian besar membayar dengan cash atau transfer via BRIMO.</textarea>
-
+      <textarea style="height: 6em;">Termasuk EDC Nop. Mesin EDC Kondisi baik. Info petugas: EDC tidak digunakan karena nasabah kebanyakan pakai EDC BCA, sedangkan nasabah BRI sebagian besar membayar dengan cash atau transfer via BRIMO.</textarea>
       <div class="section-title">8. Upload Photo Kunjungan / Kondisi Nasabah / Kondisi Mesin</div>
-      <input type="file" id="photoUpload" accept="image/*">
-      <img id="photoPreview" class="signature-preview" alt="Preview Foto Kunjungan">
+      <input type="file" id="photoUpload" accept="image/*" multiple>
+      <div id="photoPreview" class="uploaded-images"></div>
     </div>
   </div>
-
   <div class="page">
     <div class="box">
       <div class="section-title">Dibuat oleh</div>
@@ -158,57 +165,83 @@
       <input type="file" id="signatureUpload" accept="image/*">
       <img id="signaturePreview" class="signature-preview" alt="Tanda Tangan Anda akan muncul di sini">
     </div>
-
     <div class="box">
       <div class="section-title">Tanggapan Para Pejabat BRI Penerima Tindasan</div>
       <label>Nama</label>
-      <input type="text" value="Asri Mufti Aziz">
+      <input type="text" value="Meirino Dwi Handoyo">
       <label>Jabatan</label>
       <input type="text" value="Pinca">
       <label>Unit Kerja</label>
       <input type="text" value="BRI BO. Denpasar Gatot Subroto">
       <label>Tanggal</label>
-      <input type="month" value="2024-09">
-      <label>Tanda Tangan Manual (isi setelah dicetak)</label>
-      <div class="signature-box-print">(Tanda Tangan Manual)</div>
+      <input type="date" value="2024-09-03">
+      <label>Tanda Tangan Manual</label>
+      <div class="signature-box-print"><span>(Tanda Tangan Manual)</span></div>
     </div>
-
     <div class="box">
       <div class="section-title">Catatan Tambahan</div>
-      <textarea>Isi tambahan lainnya jika diperlukan oleh petugas atau supervisor.</textarea>
+      <textarea style="height: 9em;">Isi tambahan lainnya jika diperlukan oleh petugas atau supervisor.</textarea>
     </div>
   </div>
+</div>
+<div class="print-button">
+  <button onclick="window.print()">🖨️ Cetak Formulir</button>
+  <button onclick="saveAsPDF()">💾 Simpan ke PDF</button>
+</div>
+<script>
+  document.getElementById('signatureUpload').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('signaturePreview').src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
 
-  <div class="print-button">
-    <button onclick="window.print()">🖨️ Cetak Formulir</button>
-  </div>
-
-  <script>
-    const upload = document.getElementById('signatureUpload');
-    const preview = document.getElementById('signaturePreview');
-    upload.addEventListener('change', function(event) {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          preview.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      }
+  document.getElementById('photoUpload').addEventListener('change', function(event) {
+    const preview = document.getElementById('photoPreview');
+    preview.innerHTML = '';
+    Array.from(event.target.files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        preview.appendChild(img);
+      };
+      reader.readAsDataURL(file);
     });
+  });
 
-    const photoUpload = document.getElementById('photoUpload');
-    const photoPreview = document.getElementById('photoPreview');
-    photoUpload.addEventListener('change', function(event) {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          photoPreview.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-  </script>
+  function saveAsPDF() {
+    const merchantInput = document.getElementById('namaMerchant');
+    let merchantName = merchantInput ? merchantInput.value.trim() : 'Laporan';
+    merchantName = merchantName.replace(/[\\/:*?"<>|]/g, '');
+
+    const savedCounts = JSON.parse(localStorage.getItem('pdfSaveCounts') || '{}');
+    const currentCount = savedCounts[merchantName] || 0;
+    savedCounts[merchantName] = currentCount + 1;
+    localStorage.setItem('pdfSaveCounts', JSON.stringify(savedCounts));
+
+    let fileName = merchantName;
+    if (currentCount > 0) {
+      fileName += ` (${currentCount})`;
+    }
+    fileName += '.pdf';
+
+    const element = document.getElementById('pdfContent');
+
+    const opt = {
+      margin: 0,
+      filename: fileName,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 0.75, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(element).save();
+  }
+</script>
 </body>
 </html>
