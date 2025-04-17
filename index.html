@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LKN Merchant Online Form</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     body {
       font-family: 'Times New Roman', serif;
@@ -21,6 +21,7 @@
       border: 1px solid #000;
       position: relative;
       page-break-after: always;
+      background: #fff;
     }
     h2 {
       text-align: center;
@@ -64,6 +65,7 @@
       font-size: 14pt;
       padding: 6px 16px;
       margin: 0 5px;
+      cursor: pointer;
     }
     .signature-preview {
       width: 100%;
@@ -150,6 +152,7 @@
       <div id="photoPreview" class="uploaded-images"></div>
     </div>
   </div>
+
   <div class="page">
     <div class="box">
       <div class="section-title">Dibuat oleh</div>
@@ -184,10 +187,12 @@
     </div>
   </div>
 </div>
+
 <div class="print-button">
   <button onclick="window.print()">🖨️ Cetak Formulir</button>
-  <button onclick="saveAsPDF()">💾 Simpan ke PDF</button>
+  <button onclick="saveAsPNG()">💾 Simpan ke PNG</button>
 </div>
+
 <script>
   document.getElementById('signatureUpload').addEventListener('change', function(event) {
     const file = event.target.files[0];
@@ -214,33 +219,43 @@
     });
   });
 
-  function saveAsPDF() {
+  function saveAsPNG() {
+    const pages = document.querySelectorAll('.page');
     const merchantInput = document.getElementById('namaMerchant');
     let merchantName = merchantInput ? merchantInput.value.trim() : 'Laporan';
     merchantName = merchantName.replace(/[\\/:*?"<>|]/g, '');
 
-    const savedCounts = JSON.parse(localStorage.getItem('pdfSaveCounts') || '{}');
+    const savedCounts = JSON.parse(localStorage.getItem('pngSaveCounts') || '{}');
     const currentCount = savedCounts[merchantName] || 0;
     savedCounts[merchantName] = currentCount + 1;
-    localStorage.setItem('pdfSaveCounts', JSON.stringify(savedCounts));
+    localStorage.setItem('pngSaveCounts', JSON.stringify(savedCounts));
 
-    let fileName = merchantName;
-    if (currentCount > 0) {
-      fileName += ` (${currentCount})`;
-    }
-    fileName += '.pdf';
+    const scale = 2;
 
-    const element = document.getElementById('pdfContent');
+    Promise.all(
+      Array.from(pages).map(page => html2canvas(page, { scale, useCORS: true }))
+    ).then(results => {
+      const totalHeight = results.reduce((sum, canvas) => sum + canvas.height, 0);
+      const maxWidth = Math.max(...results.map(canvas => canvas.width));
 
-    const opt = {
-      margin: 0,
-      filename: fileName,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 0.75, useCORS: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
+      const finalCanvas = document.createElement('canvas');
+      finalCanvas.width = maxWidth;
+      finalCanvas.height = totalHeight;
+      const ctx = finalCanvas.getContext('2d');
 
-    html2pdf().set(opt).from(element).save();
+      let offsetY = 0;
+      results.forEach(canvas => {
+        ctx.drawImage(canvas, 0, offsetY);
+        offsetY += canvas.height;
+      });
+
+      const link = document.createElement('a');
+      let fileName = merchantName;
+      if (currentCount > 0) fileName += ` (${currentCount})`;
+      link.download = `${fileName}.png`;
+      link.href = finalCanvas.toDataURL('image/png');
+      link.click();
+    });
   }
 </script>
 </body>
